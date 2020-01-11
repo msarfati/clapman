@@ -58,8 +58,24 @@ fn generate_manpage(app: App) {
     }
 
     // Not all clap applications will use crate_authors
-    let authors = crate_authors!("\n");
-    println!("{}", authors);
+    for author in crate_authors!("\n").split("\n") {
+        // TODO: we can't assume <> will always enclose emails
+        let name_email: Vec<String> = author
+            .split('<')
+            .into_iter()
+            .map(|x| x.replace(">", ""))
+            .map(|x| x.trim().to_string())
+            .collect();
+
+        manpage = manpage.author(
+            Author::new(&name_email[0])
+                .email(&name_email[1]));
+    }
+
+    manpage = manpage.author(Author::new("Alice Person").email("alice@person.com"));
+    manpage = manpage.author(Author::new("Bob Human").email("bob@human.com"));
+    // let clap_authors = crate_authors!("\n");
+    // println!("{}", authors);
     // manpage = manpage.author(Author::new("Alice Person").email("alice@person.com"));
 
     fs::write(MAN_PAGE_FILEPATH, manpage.render()).expect("Couldn't write manpage out.");
